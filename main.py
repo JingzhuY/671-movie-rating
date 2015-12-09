@@ -10,6 +10,22 @@ from math import sqrt
 import progressbar
 import json
 
+# load "movies.dat" to a dictionary
+# output: dictionary of movie information
+def loadsMovieData():
+	movies = dict()
+	fhand= open('movies.dat','rU')
+	lines = fhand.readlines()
+
+	for line in lines:
+		line = line.rstrip()
+		line = line.split('::')
+		movies[line[0]]= dict()
+		movies[line[0]]['name'] = line[1]
+		movies[line[0]]['genre'] = line[2].split('|')
+	return movies
+
+
 # input:  a list l
 # output: a dictionary with this format:
 #		{user1: {movie1: rating,
@@ -125,10 +141,10 @@ def main():
 	SourceLines = csv.reader(f, delimiter=',')
 	SourceLines = list(SourceLines)
 	user_movie = preprocess(SourceLines[1:])
-	with open('user_movie.json','w') as f:
-		json.dump(user_movie,f)
-	print 'file saved'
-	print len(user_movie)
+	#with open('user_movie.json','w') as f:
+	#	json.dump(user_movie,f)
+	#print 'file saved'
+	#print len(user_movie)
 
 
 	# get 10 recommended movies with highest scores
