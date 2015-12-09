@@ -16,7 +16,7 @@ if( isset($_POST['who']) && isset($_POST['pass'])){
 		//$failure = "User name and password are required";	 
 		//Instead, redirect to the current page 
 		header("Location: index.php");
-		$_SESSION['error'] = "User name and password are required";
+		$_SESSION['error'] = "User ID and password are required";
 		exit();
 	}
 	// if user and pass are not blank, check for the password by comparing to the stored hash. 
@@ -61,7 +61,7 @@ if( isset($_POST['who']) && isset($_POST['pass'])){
 		}
 	?>
 	<form method = "POST" action = "index.php">
-		<label for = "nam">User Name</label>
+		<label for = "nam">User ID</label>
 		<input type = "text" name = "who" id = "nam"> <br>
 		<label for = "id_1723">Password</label>
 		<input type = "text" name = "pass" id = "id_1723"> <br>
