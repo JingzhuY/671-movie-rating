@@ -1,38 +1,11 @@
-'''
-Collaborative filtering
-
-steps:
-1. Pearson correlaton score (similarity score)
-2. Predict used weighted score
-''' 
-import csv
-from math import sqrt
-import progressbar
+#!/usr/bin/env python
+import cgi
 import json
+from math import sqrt
 
-# input:  a list l
-# output: a dictionary with this format:
-#		{user1: {movie1: rating,
-#				  movie2: rating,
-#				  ...,
-#				  movien: rating},
-#		 User2: {}}
-def preprocess(l):
-	result = dict()
-	print "preprocessing..."
-	bar = progressbar.ProgressBar(maxval = len(l) , \
-        widgets=[progressbar.Bar('=','[',']'), ' ', progressbar.Percentage()])
-	i = 0
-	bar.start()
-	for line in l:
-		bar.update(i + 1)
-		i+=1
-		if int(line[0]) not in result.keys():
-			result[int(line[0])] = dict()
-			result[int(line[0])][int(line[1])]=int(line[2])
-		else:
-			result[int(line[0])][int(line[1])]=int(line[2])
-	return result
+print "Content-Type: text/html" # HTML is following
+print # blank line, end of headers
+
 
 
 # input: movie-rating data two users
@@ -78,8 +51,8 @@ def predictRatings(userid, user_movie, n):
 	simSums = dict()
 	rankings_list = []
 	user = user_movie[userid]
-	print "user: "+str(userid)
 	for other in user_movie:
+		# skip the user himself
 		if other == userid:
 			continue
 		other = user_movie[other]
@@ -102,33 +75,28 @@ def predictRatings(userid, user_movie, n):
 	rankings.sort()
 	rankings.reverse()
 	#return recommended movies
-	print rankings[:n]
-	
-	
+	return rankings[:n]
 
-def main():
-	user_id = range(2783, 6041) # [2783...6040]
-	movie_id = range(1, 3953) # [1...3952]
-	f = open('training_ratings_for_kaggle_comp.csv','rU')
-	SourceLines = csv.reader(f, delimiter=',')
-	SourceLines = list(SourceLines)
-	user_movie = preprocess(SourceLines[1:])
-	with open('user_movie.json','w') as f:
-		json.dump(user_movie,f)
-	print 'file saved'
-	print len(user_movie)
+#---------------UI-------------------
+print "<TITLE>CGI output</TITLE>"
+print "<H1>This is my first CGI script</H1>"
+form = cgi.FieldStorage()
 
+# get posted value from form
 
-	# get 10 recommended movies with highest scores
-	i=0
-	for user in user_movie:
-		i+=1
-		if i>5: # for testing, print recommendations for 5 users
-			break
-		predictRatings(user, user_movie, 10)
-		
-	#print pearsonSim(user_movie[2783],user_movie[2785])
-	print ''
+userid = form['who'].value
 
-if __name__ == '__main__':
-    main()
+formhtml = '''
+<p>User: %s</p> 
+'''  
+print formhtml % (userid)
+
+print "Recommended movie for you:"
+print '\r\n'
+fhand = open('user_movie.json','rU')
+lines = fhand.readlines()
+user_movie = json.loads(lines[0])
+recommended_movies = predictRatings(userid, user_movie, 10)
+for (r, m) in recommended_movies:
+	print m
+	print '\r\n'
