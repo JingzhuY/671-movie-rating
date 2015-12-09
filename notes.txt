@@ -1,0 +1,40 @@
+Paper:
+http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5562751
+Linear regression & collaborative filtering
+http://cseweb.ucsd.edu/~jmcauley/cse255/projects/Yashodhan_Karandikar.pdf
+
+Methods:
+http://dataaspirant.com/2015/05/25/collaborative-filtering-recommendation-engine-implementation-in-python/ 
+http://aimotion.blogspot.com/2009/11/collaborative-filtering-implementation.html
+http://www.salemmarafi.com/code/collaborative-filtering-with-python/ 
+python package for recommender system: https://pypi.python.org/pypi/pysuggest/1.0 
+
+
+Steps:
+feature selection (bar charts to rule out irrelevant features)
+user rating normalization
+method 1: linear regression (http://cseweb.ucsd.edu/~jmcauley/cse255/projects/Yashodhan_Karandikar.pdf Page 4)
+vector (user-movie pair): features: age, gender, occupation, movie genre, avg user ratings, avg movie rating
+
+method 2: collaborative filter
+only movie features are used
+user-movie matrix
+Application
+
+
+
+UI
+login
+user ID: (4-digit from 2783 to 6040) 
+password: random
+rating history
+recommendations (list)
+No. (from 1 to 10)
+movie title
+genres
+average ratings
+
+get user id from html: http://stackoverflow.com/questions/464040/how-are-post-and-get-variables-handled-in-python 
+
+
+
