@@ -74,6 +74,11 @@ def pearsonSim(user1, user2):
 #		 n -- recommend top n movies
 # output: a list of highest movie-rating (using weighted average)
 def predictRatings(userid, user_movie, n):
+	movie_info = dict()
+	for line in open('movies.dat', 'r'):
+	    temp = line.split('::')
+	    movie_info[temp[0]] = temp[1:]
+	
 	totals = dict()
 	simSums = dict()
 	rankings_list = []
@@ -100,9 +105,16 @@ def predictRatings(userid, user_movie, n):
 	# create normalized list
 	rankings = [(total / simSums[m], m) for m, total in totals.items()]
 	rankings.sort()
-	rankings.reverse()
+	# rankings.reverse()
 	#return recommended movies
-	print rankings[:n]
+	# print rankings[:n]
+	ranks = rankings.reverse()[:n]
+	#return recommended movies with title & info
+	rec_result = dict()
+	for i in range(10):
+		m_id = ranks[i][1]
+		rec_result[i] = movie_info[m_id]
+	print rec_result
 	
 	
 
