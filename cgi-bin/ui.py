@@ -6,8 +6,6 @@ from math import sqrt
 print "Content-Type: text/html" # HTML is following
 print # blank line, end of headers
 
-
-
 # input: movie-rating data two users
 # pearson similarity
 def pearsonSim(user1, user2):
@@ -77,26 +75,62 @@ def predictRatings(userid, user_movie, n):
 	#return recommended movies
 	return rankings[:n]
 
+# output: dictionary of movie information
+def loadsMovieData():
+	movies = dict()
+	fhand= open('movies.dat','rU')
+	lines = fhand.readlines()
+
+	for line in lines:
+		line = line.rstrip()
+		line = line.split('::')
+		movies[line[0]]= dict()
+		movies[line[0]]['name'] = line[1]
+		movies[line[0]]['genre'] = line[2].split('|')
+	return movies
+
 #---------------UI-------------------
-print "<TITLE>CGI output</TITLE>"
-print "<H1>This is my first CGI script</H1>"
-form = cgi.FieldStorage()
+print "<TITLE>Movie_recommender</TITLE>"
+print "<H1>Movie recommeder</H1>"
+# read file to dictionaries
+fhand = open('user_movie.json','rU')
+lines = fhand.readlines()
+user_movie = json.loads(lines[0])
+movies = loadsMovieData()
 
 # get posted value from form
-
+form = cgi.FieldStorage()
 userid = form['who'].value
 
+# print user id
 formhtml = '''
 <p>User: %s</p> 
 '''  
 print formhtml % (userid)
 
-print "Recommended movie for you:"
+# print movies rated 
+print "<p><b>Your 5-star rating history:</b><br>"
+rated = user_movie[userid]
+#rated = sorted(rated.items(), key = lambda d: d[1], reverse = True)
+#for (m, r) in rated[:10]:
+print '<table>'
+print '<tr><td><b>Title</b></td><td><b>Genre</b></td></tr>'
+for m, r in rated.items():
+	if r == 5:
+		print '<tr>'
+		print '<td>' + movies[m]['name']+ '</td><td>' + ' '.join(movies[m]['genre']) + '</td>'
+		print '</tr>'
+print '</table></p>'
+
+# print movies recommended
+print "<p><b>Recommended movie for you:</b><br>"
 print '\r\n'
-fhand = open('user_movie.json','rU')
-lines = fhand.readlines()
-user_movie = json.loads(lines[0])
+
 recommended_movies = predictRatings(userid, user_movie, 10)
+print '<table>'
+print '<tr><td><b>Title</b></td><td><b>Genre</b></td></tr>'
 for (r, m) in recommended_movies:
-	print m
-	print '\r\n'
+	print '<tr>'
+	print '<td>'+movies[m]['name'] + '</td><td>' + ' '.join(movies[m]['genre']) + '</td>'
+	print '</tr>'
+print '</table></p>'
