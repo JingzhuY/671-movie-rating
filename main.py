@@ -48,6 +48,12 @@ def preprocess(l):
 			result[int(line[0])][int(line[1])]=int(line[2])
 		else:
 			result[int(line[0])][int(line[1])]=int(line[2])
+	for k,v in result.items():
+		if len(v)<100:
+			del result[k] 
+	print "length users" + str(len(result))
+	#length users1560
+	print result.keys()
 	return result
 
 
@@ -100,6 +106,7 @@ def predictRatings(userid, user_movie, n):
 	rankings_list = []
 	user = user_movie[userid]
 	print "user: "+str(userid)
+	# user: 2785
 	for other in user_movie:
 		if other == userid:
 			continue
@@ -120,19 +127,22 @@ def predictRatings(userid, user_movie, n):
 
 	# create normalized list
 	rankings = [(total / simSums[m], m) for m, total in totals.items()]
-	print rankings
+	
 	rankings.sort()
-	# rankings.reverse()
+	rankings.reverse()
+	print rankings
+	
 	#return recommended movies
 	# print rankings[:n]
-	ranks = rankings.reverse()[:n]
+	#ranks = rankings[:n]
 	#return recommended movies with title & info
-	rec_result = dict()
-	for i in range(10):
-		m_id = ranks[i][1]
-		rec_result[i] = movie_info[m_id]
-	print rec_result
-	
+	#rec_result = dict()
+	#for i in range(10):
+	#	m_id = ranks[i][1]
+	#	rec_result[i] = movie_info[m_id]
+	#print rec_result
+	print rankings[:15]
+
 	
 
 def main():
@@ -143,13 +153,13 @@ def main():
 	SourceLines = list(SourceLines)
 
 	user_movie = preprocess(SourceLines[1:])
-	#with open('user_movie.json','w') as f:
-	#	json.dump(user_movie,f)
-	#print 'file saved'
+	with open('user_movie.json','w') as f:
+		json.dump(user_movie,f)
+	print 'file saved'
 
 	# get 10 recommended movies with highest scores
 	i=0
-	for user in dataset:
+	for user in user_movie:
 		i+=1
 		if i>5: # for testing, print recommendations for 5 users
 			break
