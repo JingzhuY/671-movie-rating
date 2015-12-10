@@ -48,19 +48,26 @@ def predictRatings(userid, user_movie, n):
 	totals = dict()
 	simSums = dict()
 	rankings_list = []
+	similarity = dict()
 	user = user_movie[userid]
-	for other in user_movie:
+	for otherid in user_movie:
 		# skip the user himself
-		if other == userid:
+		if otherid == userid:
 			continue
-		other = user_movie[other]
+		other = user_movie[otherid]
 		sim = pearsonSim(user, other)
-		
+		similarity[otherid] = sim
+
+	#sort user-similarity
+	similarity = sorted(similarity.items(), key = lambda d:d[1], reverse = True)
+
+	for (otherid, sim) in similarity[:30]:
+		other = user_movie[otherid]
 		# ignore similarity less or equal than 0
 		if sim <= 0:
 			continue
 		for m in other:
-			if m not in user or user[m] == 0:
+			if m not in user:
 				# similarity * rating
 				totals.setdefault(m, 0)
 				totals[m] += other[m] * sim
@@ -72,6 +79,22 @@ def predictRatings(userid, user_movie, n):
 	rankings = [(total / simSums[m], m) for m, total in totals.items()]
 	rankings.sort()
 	rankings.reverse()
+	#-----testing----
+	#movies=loadsMovieData()
+	
+	#i=0
+	#for (u, s) in similarity:
+	#	print str(u) + '  '+str(s)
+	#	print '<br>'
+	#	i+=1
+	#	if i>40:
+	#		break
+	#	for m in user_movie[u].keys():
+	#		if user_movie[u][m] in [4,5]:
+	#			print movies[m]['name']+'|| '+', '.join(movies[m]['genre'])+str(user_movie[u][m])
+	#			print '<br>'
+	#	print '<br><br>'
+	
 	#return recommended movies
 	return rankings[:n]
 
@@ -108,6 +131,19 @@ formhtml = '''
 '''  
 print formhtml % (userid)
 
+# print movies recommended
+print "<p><b>Recommended movie for you:</b><br>"
+print '\r\n'
+
+recommended_movies = predictRatings(userid, user_movie, 15)
+print '<table>'
+print '<tr><td><b>Title</b></td><td><b>Genre</b></td><td><b>rating</b></td></tr>'
+for (r, m) in recommended_movies:
+	print '<tr>'
+	print '<td>'+movies[m]['name'] + '</td><td>' + '/ '.join(movies[m]['genre']) + '</td><td>'+str(r)+'</td>'
+	print '</tr>'
+print '</table></p>'
+
 # print movies rated 
 print "<p><b>Your 5-star rating history:</b><br>"
 rated = user_movie[userid]
@@ -118,19 +154,6 @@ print '<tr><td><b>Title</b></td><td><b>Genre</b></td></tr>'
 for m, r in rated.items():
 	if r == 5:
 		print '<tr>'
-		print '<td>' + movies[m]['name']+ '</td><td>' + ' '.join(movies[m]['genre']) + '</td>'
+		print '<td>' + movies[m]['name']+ '</td><td>' + '/ '.join(movies[m]['genre']) + '</td>'
 		print '</tr>'
-print '</table></p>'
-
-# print movies recommended
-print "<p><b>Recommended movie for you:</b><br>"
-print '\r\n'
-
-recommended_movies = predictRatings(userid, user_movie, 10)
-print '<table>'
-print '<tr><td><b>Title</b></td><td><b>Genre</b></td></tr>'
-for (r, m) in recommended_movies:
-	print '<tr>'
-	print '<td>'+movies[m]['name'] + '</td><td>' + ' '.join(movies[m]['genre']) + '</td>'
-	print '</tr>'
 print '</table></p>'

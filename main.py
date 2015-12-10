@@ -120,6 +120,7 @@ def predictRatings(userid, user_movie, n):
 
 	# create normalized list
 	rankings = [(total / simSums[m], m) for m, total in totals.items()]
+	print rankings
 	rankings.sort()
 	# rankings.reverse()
 	#return recommended movies
@@ -140,16 +141,15 @@ def main():
 	f = open('training_ratings_for_kaggle_comp.csv','rU')
 	SourceLines = csv.reader(f, delimiter=',')
 	SourceLines = list(SourceLines)
+
 	user_movie = preprocess(SourceLines[1:])
 	#with open('user_movie.json','w') as f:
 	#	json.dump(user_movie,f)
 	#print 'file saved'
-	#print len(user_movie)
-
 
 	# get 10 recommended movies with highest scores
 	i=0
-	for user in user_movie:
+	for user in dataset:
 		i+=1
 		if i>5: # for testing, print recommendations for 5 users
 			break
