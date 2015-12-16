@@ -52,9 +52,43 @@ def preprocess(l):
 		if len(v)<100:
 			del result[k] 
 	print "length users" + str(len(result))
-	#length users1560
-	print result.keys()
+	#length users 1560(>100)   1069(>150)   806(>200)
+	#print result.keys()
 	return result
+
+def seperateTestData(user_movie):
+	# 3883 movies in total
+	# 2000 as predict set, 1883 as testing set
+	print 'seperating...'
+	bar = progressbar.ProgressBar(maxval = len(user_movie) , \
+        widgets=[progressbar.Bar('=','[',']'), ' ', progressbar.Percentage()])
+	i = 0
+	bar.start()
+	predict_user_movie = dict()
+	test_user_movie = dict()
+	movies = loadsMovieData()
+	movies = movies.keys()
+	predict_movies = movies[:2000]
+	test_movies = movies[2000:]
+
+	for u in user_movie.keys():
+		predict_user_movie[u] = dict()
+		test_user_movie[u] = dict()
+	
+	for u in user_movie.keys():
+		bar.update(i + 1)
+		i+=1
+		
+		for m in user_movie[u].keys():
+			if m in predict_movies:
+				predict_user_movie[u][m] = user_movie[u][m]
+			else:
+				
+				test_user_movie[u][m] = user_movie[u][m]
+	print "test:"+str(len(predict_user_movie))
+	return (predict_user_movie, test_user_movie, predict_movies, test_movies)
+
+	#for m in movies.keys():
 
 
 # input: movie-rating data two users
@@ -130,7 +164,6 @@ def predictRatings(userid, user_movie, n):
 	
 	rankings.sort()
 	rankings.reverse()
-	print rankings
 	
 	#return recommended movies
 	# print rankings[:n]
@@ -141,7 +174,9 @@ def predictRatings(userid, user_movie, n):
 	#	m_id = ranks[i][1]
 	#	rec_result[i] = movie_info[m_id]
 	#print rec_result
-	print rankings[:15]
+	
+	#print rankings[:15]
+	return rankings
 
 	
 
@@ -152,21 +187,80 @@ def main():
 	SourceLines = csv.reader(f, delimiter=',')
 	SourceLines = list(SourceLines)
 
-	user_movie = preprocess(SourceLines[1:])
-	with open('user_movie.json','w') as f:
-		json.dump(user_movie,f)
-	print 'file saved'
+	# preprocess
+	#user_movie = preprocess(SourceLines[1:])
 
-	# get 10 recommended movies with highest scores
-	i=0
-	for user in user_movie:
-		i+=1
-		if i>5: # for testing, print recommendations for 5 users
+	# save to file
+	#with open('user_movie.json','w') as f:
+	#	json.dump(user_movie,f)
+	#print 'file saved'
+
+	# load file
+	user_movie = dict()
+	with open('user_movie.json','rU') as f:
+		lines = f.readlines()
+		user_movie = json.loads(lines[0])
+
+	# separate test data
+	(predict_user_movie, test_user_movie, predict_movies, test_movies) = seperateTestData(user_movie)
+	#with open('predict_user_movie.json','w') as f:
+	#	json.dump(predict_user_movie,f)
+	#print 'file saved'
+	#with open('test_user_movie.json','w') as f:
+	#	json.dump(test_user_movie,f)
+	#print 'file saved'
+
+	#load file
+	#predict_user_movie = dict()
+	#test_user_movie = dict()
+	#with open('predict_user_movie.json','rU') as f:
+	#	lines = f.readlines()
+	#	predict_user_movie = json.loads(lines[0])
+	#with open('test_user_movie.json','rU') as f:
+	#	lines = f.readlines()
+	#	test_user_movie = json.loads(lines[0])
+
+
+
+	# get 15 recommended movies with highest scores
+	print 'predicting...'
+	bar = progressbar.ProgressBar(maxval = len(predict_user_movie) , \
+        widgets=[progressbar.Bar('=','[',']'), ' ', progressbar.Percentage()])
+	ii = 0
+	bar.start()
+	user_movie_predicted = dict()
+	for user in predict_user_movie.keys():
+		bar.update(ii + 1)
+		ii+=1
+		if ii>5: # for testing, print recommendations for 5 users
 			break
-		predictRatings(user, user_movie, 10)
+		user_movie_predicted[user] = predictRatings(user, predict_user_movie, 15)
+
+	i = 0
+	accuracy = 0
+	total = 0
+	for user in test_user_movie.keys():
+		i+=1
+		if i>5:
+			break
+		for m in test_user_movie[user].keys():
+			total +=1
+			predicted_list = user_movie_predicted[user]
+			rating = 0
+			
+			for (r,movie) in predicted_list:
+				
+				if str(m) == str(movie):
+					print 'find'
+					rating = r
+			print str(test_user_movie[user][m])+', '+str(int(round(rating)))
+			if int(test_user_movie[user][m]) == int(round(rating)):
+				accuracy +=1
+	print 'accuracy:'+str(float(accuracy)/total)
+
 		
-	#print pearsonSim(user_movie[2783],user_movie[2785])
-	print ''
+	
+	
 
 if __name__ == '__main__':
     main()
