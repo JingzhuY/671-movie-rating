@@ -9,7 +9,7 @@ import csv
 from math import sqrt
 import progressbar
 import json
-
+from random import choice
 # load "movies.dat" to a dictionary
 # output: dictionary of movie information
 def loadsMovieData():
@@ -48,14 +48,20 @@ def preprocess(l):
 			result[int(line[0])][int(line[1])]=int(line[2])
 		else:
 			result[int(line[0])][int(line[1])]=int(line[2])
+	bar.finish()
+
+	# set filtering  (filter out users with rating # less than 100)
 	for k,v in result.items():
-		if len(v)<100:
+		if len(v)< 100:
 			del result[k] 
 	print "length users" + str(len(result))
+
 	#length users 1560(>100)   1069(>150)   806(>200)
 	#print result.keys()
 	return result
 
+
+# 
 def seperateTestData(user_movie):
 	# 3883 movies in total
 	# 2000 as predict set, 1883 as testing set
@@ -66,27 +72,21 @@ def seperateTestData(user_movie):
 	bar.start()
 	predict_user_movie = dict()
 	test_user_movie = dict()
-	movies = loadsMovieData()
-	movies = movies.keys()
-	predict_movies = movies[:2000]
-	test_movies = movies[2000:]
-
-	for u in user_movie.keys():
-		predict_user_movie[u] = dict()
-		test_user_movie[u] = dict()
 	
-	for u in user_movie.keys():
-		bar.update(i + 1)
-		i+=1
-		
-		for m in user_movie[u].keys():
-			if m in predict_movies:
-				predict_user_movie[u][m] = user_movie[u][m]
-			else:
-				
-				test_user_movie[u][m] = user_movie[u][m]
-	print "test:"+str(len(predict_user_movie))
-	return (predict_user_movie, test_user_movie, predict_movies, test_movies)
+	for u in user_movie:
+		bar.update(i+1)
+		i +=1
+		test_user_movie[u] =dict()
+		rated_len = len(user_movie[u])
+		for i in range(1,rated_len/10): # random 10% data as testing data
+			m = choice(user_movie[u].keys())
+			test_user_movie[u][m] = user_movie[u][m]
+			del user_movie[u][m]
+	predict_user_movie = user_movie
+	bar.finish()
+	#print "pred:"+str(len(predict_user_movie))
+	#print "test:"+str(len(test_user_movie))
+	return (predict_user_movie, test_user_movie)
 
 	#for m in movies.keys():
 
@@ -139,7 +139,7 @@ def predictRatings(userid, user_movie, n):
 	simSums = dict()
 	rankings_list = []
 	user = user_movie[userid]
-	print "user: "+str(userid)
+	#print "user: "+str(userid)
 	# user: 2785
 	for other in user_movie:
 		if other == userid:
@@ -168,12 +168,6 @@ def predictRatings(userid, user_movie, n):
 	#return recommended movies
 	# print rankings[:n]
 	#ranks = rankings[:n]
-	#return recommended movies with title & info
-	#rec_result = dict()
-	#for i in range(10):
-	#	m_id = ranks[i][1]
-	#	rec_result[i] = movie_info[m_id]
-	#print rec_result
 	
 	#print rankings[:15]
 	return rankings
@@ -188,7 +182,7 @@ def main():
 	SourceLines = list(SourceLines)
 
 	# preprocess
-	#user_movie = preprocess(SourceLines[1:])
+	user_movie = preprocess(SourceLines[1:])
 
 	# save to file
 	#with open('user_movie.json','w') as f:
@@ -196,13 +190,13 @@ def main():
 	#print 'file saved'
 
 	# load file
-	user_movie = dict()
-	with open('user_movie.json','rU') as f:
-		lines = f.readlines()
-		user_movie = json.loads(lines[0])
+	#user_movie = dict()
+	#with open('user_movie.json','rU') as f:
+	#	lines = f.readlines()
+	#	user_movie = json.loads(lines[0])
 
 	# separate test data
-	(predict_user_movie, test_user_movie, predict_movies, test_movies) = seperateTestData(user_movie)
+	(predict_user_movie, test_user_movie) = seperateTestData(user_movie)
 	#with open('predict_user_movie.json','w') as f:
 	#	json.dump(predict_user_movie,f)
 	#print 'file saved'
@@ -220,6 +214,13 @@ def main():
 	#	lines = f.readlines()
 	#	test_user_movie = json.loads(lines[0])
 
+	test_predict_user = []
+	i=0
+	for u in predict_user_movie.keys():
+		i+=1
+		if i>100:
+			break
+		test_predict_user.append(u)
 
 
 	# get 15 recommended movies with highest scores
@@ -229,34 +230,48 @@ def main():
 	ii = 0
 	bar.start()
 	user_movie_predicted = dict()
-	for user in predict_user_movie.keys():
+	for user in test_predict_user:
 		bar.update(ii + 1)
-		ii+=1
-		if ii>5: # for testing, print recommendations for 5 users
-			break
+		ii += 1
+		#if ii>10: # for testing, print recommendations for 5 users
+		#	break
 		user_movie_predicted[user] = predictRatings(user, predict_user_movie, 15)
+	bar.finish()
 
-	i = 0
+	# accuracy
+	#i = 0
 	accuracy = 0
+	accuracy_real = 0
 	total = 0
-	for user in test_user_movie.keys():
-		i+=1
-		if i>5:
-			break
+	for user in test_predict_user:
+		#i+=1
+		#if i>200:
+		#	break
 		for m in test_user_movie[user].keys():
-			total +=1
+			
 			predicted_list = user_movie_predicted[user]
+
+			total +=1
 			rating = 0
 			
 			for (r,movie) in predicted_list:
-				
 				if str(m) == str(movie):
-					print 'find'
 					rating = r
-			print str(test_user_movie[user][m])+', '+str(int(round(rating)))
-			if int(test_user_movie[user][m]) == int(round(rating)):
+			
+			#print str(test_user_movie[user][m])+', '+str(int(round(rating)))
+			if int(test_user_movie[user][m]) in [int(round(rating)), int(round(rating))+1, int(round(rating))-1]:
+			#if int(test_user_movie[user][m])>(rating-1) and int(test_user_movie[user][m])<(rating+1):
+			
 				accuracy +=1
-	print 'accuracy:'+str(float(accuracy)/total)
+			if int(test_user_movie[user][m]) == int(round(rating)):
+				accuracy_real+=1
+
+	print total
+	print accuracy
+	print accuracy_real
+	print 'releived accuracy:'+str(float(accuracy)/total)
+	print 'accuracy:'+str(float(accuracy_real)/total)
+	
 
 		
 	
